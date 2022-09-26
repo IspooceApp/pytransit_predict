@@ -1,13 +1,24 @@
-from geopy.geocoders import Nominatim
+# from geopy.geocoders import Nominatim
 import requests
-import geocoder
-from countryinfo import CountryInfo
+# import geocoder
+# from countryinfo import CountryInfo
 import json
 import ephem
 from datetime import datetime
-from calendar import timegm
-from math import degrees
+# from calendar import timegm
+# from math import degrees
 import json
+
+# def ip_info(user_ip:None):
+#     if user_ip == None: 
+#         my_ip = requests.get("https://ident.me/").content.decode("UTF-8") 
+#     else:
+#         my_ip = user_ip
+#     print(my_ip)
+#     ip = geocoder.ip(my_ip)
+#     print(ip)
+#     return [ip.country, ip.city, ip.latlng]
+
 
 
 def get_details():
@@ -21,20 +32,10 @@ def get_details():
             value_list.append(str(v)) 
     return value_list
 
-def ip_info(user_ip:None):
-    if user_ip == None: 
-        my_ip = requests.get("https://ident.me/").content.decode("UTF-8") 
-    else:
-        my_ip = user_ip
-    print(my_ip)
-    ip = geocoder.ip(my_ip)
-    print(ip)
-    return [ip.country, ip.city, ip.latlng]
 
-def calculate_passes(n):
-    lat, lon = ip_info(None)[2] 
+def calculate_passes(n, lat, lon):
+    # lat, lon = ip_info(None)[2] 
     alt = (json.loads(requests.get(f"https://api.opentopodata.org/v1/srtm90m?locations={lat},{lon}&interpolation=cubic").text))['results'][0]['elevation']
-
     data = (requests.get("https://celestrak.org/NORAD/elements/stations.txt").text).split("\n")[0:3]
     tle = []
     for d in data:
@@ -46,18 +47,15 @@ def calculate_passes(n):
     location.lat = str(lat)
     location.long = str(lon)
     location.elevation = alt
-
     # Override refration calculation
     location.pressure = 0
     location.horizon = '10:00'
-
     # Set time now
     now = datetime.utcnow()
     location.date = now
-
     # Predict passes
     passes = []
-    for p in range(n):
+    for _ in range(n):
         tr, azr, tt, altt, ts, azs = location.next_pass(iss)
         duration = int((ts - tr) * 60 * 60 * 24)
         year, month, day, hour, minute, second = tr.tuple()
@@ -65,20 +63,16 @@ def calculate_passes(n):
         if duration > 60:
             passes.append({"risetime":dt, "duration": duration})
         location.date = tr + 25*ephem.minute
-
-    # Return object
-    obj = {
+    return {
         "altitude": alt,
         "passes": n,
         "response": passes
     }
-    
-    return obj
 
-def return_data(n:int):
+def return_data(n:int, lat, lon):
 
     details = get_details()
-    iss_obj = calculate_passes(n)
+    iss_obj = calculate_passes(n, lat, lon)
     imp_json_data = {
         
         "latitude": details[0],
@@ -94,3 +88,4 @@ def return_data(n:int):
         "iss data": iss_obj
     }
     return imp_json_data
+

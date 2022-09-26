@@ -24,7 +24,6 @@ async def maris():
 
 @app.get("/transit/{num}/{lat}/{long}")
 async def transit(num:int, lat: float, long: float):
-    print(num, lat, long)
     return return_data(num, lat, long)
 
 @app.get("/calc/{num}/{lat}/{long}")

@@ -3,6 +3,7 @@ from core.transit_predict import *
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi import FastAPI
+import requests
 
 app = FastAPI()
 
@@ -20,6 +21,12 @@ app.add_middleware(
 @app.get("/maris")
 async def maris():
     return "chaina"
+
+@app.get("/tle")
+async def tle():
+    res = requests.get("https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle")
+    tle_data = res.text.replace("\r", "").split("\n")
+    return [tle_data[1], tle_data[2]]
 
 
 @app.get("/transit/{num}/{lat}/{long}")
